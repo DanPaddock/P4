@@ -287,6 +287,7 @@ struct QNode *deQueue(struct Queue *q)
 // Semaphore Code
 ///////////////////
 
+/* Create a new semaphore pointed to by sp with a count value of sem_count. */
 int sem_init(sem_t **sp, int sem_count)
 {
     *sp = malloc(sizeof(sem_t));
@@ -294,6 +295,7 @@ int sem_init(sem_t **sp, int sem_count)
     (*sp)->q = createQueue();
 }
 
+ /* Current thread does a wait (P) on the specified semaphore. */
 void sem_wait(sem_t *sem)
 {
     tcb *tmp;
@@ -311,6 +313,7 @@ void sem_wait(sem_t *sem)
     }
 }
 
+/* Current thread does a signal (V) on the specified semaphore. Follow the Mesa semantics (p. 9 of Chapter 30 Condition Variables) where the thread that signals continues, and the first waiting (blocked) thread (if there is any) becomes ready. */
 void sem_signal(sem_t *sem)
 {
     sem->count++;
@@ -324,6 +327,7 @@ void sem_signal(sem_t *sem)
     }
 }
 
+/* Destroy (free) any state related to specified semaphore. */
 void sem_destroy(sem_t **sem)
 {
     struct tcb *tmp;
@@ -343,12 +347,13 @@ void sem_destroy(sem_t **sem)
         free(tmp);
         qntmp = qntmp->next;
     }
-
+    
     free((*sem)->q);
     free(*sem);
     return;
 }
 
+ /* Create a mailbox pointed to by mb. */
 int mbox_create(mbox **mb) {
     struct mbox* newMbox = (mbox *) malloc(sizeof(mbox));
     newMbox->msg = NULL;
@@ -357,12 +362,14 @@ int mbox_create(mbox **mb) {
     return 1;
 }
 
+ /* Destroy any state related to the mailbox pointed to by mb. */
 void mbox_destroy(mbox **mb) {
     struct mbox * tempBox = *mb;
     free(tempBox->msg);
     free(tempBox);
 }
 
+/* Deposit message msg of length len into the mailbox pointed to by mb. */
 void mbox_deposit(mbox *mb, char *msg, int len) {
     struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
     struct messageNode * headMsg = mb->msg;
@@ -381,6 +388,7 @@ void mbox_deposit(mbox *mb, char *msg, int len) {
     }
 }
 
+ /* Withdraw the first message from the mailbox pointed to by mb into msg and set the message's length in len accordingly. The caller of mbox_withdraw() is responsible for allocating the space in which the received message is stored. If there is no message in the mailbox, len is set to 0. mbox_withdraw() is not blocking. Even if more than one message awaits the caller, only one message is returned per call to mbox_withdraw(). Messages are withdrew in the order in which they were deposited. */
 void mbox_withdraw(mbox *mb, char *msg, int *len) {
     struct messageNode * headMsg = mb->msg;
     if (headMsg == NULL) {
@@ -397,27 +405,95 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
     }
 }
 
+/*
+ // Send...
+ struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
+ struct messageNode * headMsg = msgQueue->msg;
+ newMsg->message = malloc(len+1);
+ strcpy(newMsg->message, msg);
+ newMsg->len = len;
+ newMsg->receiver = tid;
+ newMsg->sender = running->thread_id;
+ newMsg->next = NULL;
+ if (msgQueue->msg == NULL) {
+ msgQueue->msg = newMsg;
+ }
+ else {
+ while (headMsg->next) {
+ headMsg = headMsg -> next;
+ }
+ headMsg->next = newMsg;
+ }
+ */
+
+/* Send a message to the thread whose tid is tid. msg is the pointer to the start of the message, and len specifies the length of the message in bytes. In your implementation, all messages are character strings. */
 void send(int tid, char *msg, int len) {
-    struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
+    
+    struct messageNode * sendMsg = (messageNode *) malloc(sizeof(messageNode));
+    sendMsg->message = malloc(len+1);
+    strcpy(sendMsg->message, msg);
+    sendMsg->len = len;
+    sendMsg->receiver = tid;
+    sendMsg->sender = running->thread_id;
+    sendMsg->next = NULL;
+    
     struct messageNode * headMsg = msgQueue->msg;
-    newMsg->message = malloc(len+1);
-    strcpy(newMsg->message, msg);
-    newMsg->len = len;
-    newMsg->receiver = tid;
-    newMsg->sender = running->thread_id;
-    newMsg->next = NULL;
-    if (msgQueue->msg == NULL) {
-        msgQueue->msg = newMsg;
-    }
-    else {
-        while (headMsg->next) {
-            headMsg = headMsg -> next;
-        }
-        headMsg->next = newMsg;
-    }
+
+    receive(&tid, &msg, len);
+    
+    free(sendMsg->message);
+    free(sendMsg->len);
+    free(sendMsg->len);
+    free(sendMsg->receiver);
+    free(sendMsg->sender);
+    free(sendMsg->next);
+    free(sendMsg);
+    free(headMsg);
 }
+
+/* Wait for and receive a message from another thread. The caller has to specify the sender's tid in tid, or sets tid to 0 if it intends to receive a message sent by any thread. If there is no "matching" message to receive, the calling thread waits (i.e., blocks itself). [A sending thread is responsible for waking up a waiting, receiving thread.] Upon returning, the message is stored starting at msg. The tid of the thread that sent the message is stored in tid, and the length of the message is stored in len. The caller of receive() is responsible for allocating the space in which the message is stored. Even if more than one message awaits the caller, only one message is returned per call to receive(). Messages are received in the order in which they were sent. The caller will not resume execution until it has received a message (blocking receive). */
 void receive(int *tid, char *msg, int *len) {
-    //todo
+    if(&tid == tid){
+        struct messageNode * recvMsg = (messageNode *) malloc(sizeof(messageNode));
+        recvMsg->message = malloc(len+1);
+        strcpy(recvMsg->message, msg);
+        recvMsg->len = *len;
+        recvMsg->receiver = *tid;
+        recvMsg->sender = running->thread_id;
+        recvMsg->next = NULL;
+    }
     return;
 }
+
+/*
+ 
+ 
+ void Producer(void){
+ 
+ int item;
+ Message m;
+ 
+ while(1){
+ 
+ receive(Consumer, &m);
+ item = produce();
+ build_message(&m , item ) ;
+ send(Consumer, &m);
+ }
+ }
+ void Consumer(void){
+ 
+ int item;
+ Message m;
+ 
+ while(1){
+ 
+ receive(Producer, &m);
+ item = extracted_item();
+ send(Producer, &m);
+ consume_item(item);
+ }
+ }
+
+ */
 
