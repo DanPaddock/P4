@@ -443,7 +443,6 @@ void send(int tid, char *msg, int len) {
     
     free(sendMsg->message);
     free(sendMsg->len);
-    free(sendMsg->len);
     free(sendMsg->receiver);
     free(sendMsg->sender);
     free(sendMsg->next);
@@ -458,6 +457,42 @@ void receive(int *tid, char *msg, int *len) {
         recvMsg->message = malloc(len+1);
         strcpy(recvMsg->message, msg);
         recvMsg->len = *len;
+        recvMsg->receiver = *tid;
+        recvMsg->sender = running->thread_id;
+        recvMsg->next = NULL;
+    }
+    return;
+}
+
+/* Send a message and wait for reception. The same as send(), except that the caller does not return until the destination thread has received the message. */
+void block_send(int tid, char *msg, int length){
+    
+    struct messageNode * sendMsg = (messageNode *) malloc(sizeof(messageNode));
+    sendMsg->message = malloc(length+1);
+    strcpy(sendMsg->message, msg);
+    sendMsg->len = length;
+    sendMsg->receiver = tid;
+    sendMsg->sender = running->thread_id;
+    sendMsg->next = NULL;
+    
+    struct messageNode * headMsg = msgQueue->msg;
+    
+    block_receive(&tid, &msg, length);
+    
+    free(sendMsg->message);
+    free(sendMsg->len);
+    free(sendMsg->receiver);
+    free(sendMsg->sender);
+    free(sendMsg->next);
+    free(sendMsg);
+    free(headMsg);
+}
+void block_receive(int *tid, char *msg, int *length){
+    if(&tid == tid){
+        struct messageNode * recvMsg = (messageNode *) malloc(sizeof(messageNode));
+        recvMsg->message = malloc(length+1);
+        strcpy(recvMsg->message, msg);
+        recvMsg->len = *length;
         recvMsg->receiver = *tid;
         recvMsg->sender = running->thread_id;
         recvMsg->next = NULL;
