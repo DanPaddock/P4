@@ -460,6 +460,13 @@ void receive(int *tid, char *msg, int *len) {
         recvMsg->receiver = *tid;
         recvMsg->sender = running->thread_id;
         recvMsg->next = NULL;
+        
+        free(recvMsg->message);
+        free(recvMsg->len);
+        free(recvMsg->receiver);
+        free(recvMsg->sender);
+        free(recvMsg->next);
+        free(recvMsg);
     }
     return;
 }
@@ -486,6 +493,8 @@ void block_send(int tid, char *msg, int length){
     free(sendMsg->next);
     free(sendMsg);
     free(headMsg);
+    
+    return;
 }
 void block_receive(int *tid, char *msg, int *length){
     if(&tid == tid){
@@ -496,7 +505,15 @@ void block_receive(int *tid, char *msg, int *length){
         recvMsg->receiver = *tid;
         recvMsg->sender = running->thread_id;
         recvMsg->next = NULL;
+        
+        free(recvMsg->message);
+        free(recvMsg->len);
+        free(recvMsg->receiver);
+        free(recvMsg->sender);
+        free(recvMsg->next);
+        free(recvMsg);
     }
+    
     return;
 }
 
