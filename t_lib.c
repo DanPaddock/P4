@@ -450,11 +450,12 @@ void send(int tid, char *msg, int len) {
     */
     
      mbox *destination = (mbox *) malloc(sizeof(mbox));
+    QNode *current = (QNode *) malloc(sizeof(QNode *));
     
     if(msgQueue->mbox_sem->q->front->tcb->thread_id == tid){
         destination = msgQueue;
     } else{
-        QNode *current;
+       // QNode *current;
         if (ready != NULL) {
             current = ready->front;
             
