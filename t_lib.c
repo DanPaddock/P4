@@ -447,7 +447,7 @@ void send(int tid, char *msg, int len) {
         headMsg->next = newMsg;
     }
     
-    mbox_deposit(msgQueue);
+    mbox_deposit(msgQueue, newMsg, newMsg->len);
   /*  mbox * sendTo;
     if (running->thread_id == tid) {
         sendTo = msgQueue;
