@@ -389,26 +389,9 @@ void mbox_deposit(mbox *mb, char *msg, int len) {
 }
 
  /* Withdraw the first message from the mailbox pointed to by mb into msg and set the message's length in len accordingly. The caller of mbox_withdraw() is responsible for allocating the space in which the received message is stored. If there is no message in the mailbox, len is set to 0. mbox_withdraw() is not blocking. Even if more than one message awaits the caller, only one message is returned per call to mbox_withdraw(). Messages are withdrew in the order in which they were deposited. */
-void mbox_withdraw(mbox *mb, int *tid, char *msg, int *len) {
+void mbox_withdraw(mbox *mb, char *msg, int *len) {
     
-    messageNode *messageNodeHead = mb->msg;
-    
-    char *message = "";
-    *len = 0;
-    
-    if (NULL != messageNodeHead) {
-        while (NULL != messageNodeHead->next) {
-            if (messageNodeHead->sender == *tid) {
-                *len = messageNodeHead->len;
-                message = messageNodeHead->message;
-            }
-            mb->msg = mb->msg->next;
-        }
-    }
-    
-    strcpy(msg, message);
-    // t_yield();
-   /* struct messageNode * headMsg = mb->msg;
+   struct messageNode * headMsg = mb->msg;
     if (headMsg == NULL) {
         len = 0;
     }
@@ -420,7 +403,7 @@ void mbox_withdraw(mbox *mb, int *tid, char *msg, int *len) {
         mb->msg = mb->msg->next;
         free(headMsg -> message);
         free(headMsg);
-    }*/
+    }
 }
 
 /*
@@ -527,9 +510,10 @@ void send(int tid, char *msg, int len) {
 void receive(int *tid, char *msg, int *len) {
    mbox *recv = msgQueue;
     if (tid == 0) {
-        mbox_withdraw(recv, 0, msg, len);
+        mbox_withdraw(recv, msg, len);
     }else {
-        mbox_withdraw(recv, tid, msg, len);
+        sem_wait(msgQueue->mbox_sem);
+        mbox_withdraw(recv, msg, len);
     }
 }
 
