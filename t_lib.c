@@ -488,6 +488,8 @@ void send(int tid, char *msg, int len) {
         }*/
     
     mbox_deposit(destination, msg, len);
+    
+    free(destination);
   /*  mbox * sendTo;
     if (running->thread_id == tid) {
         sendTo = msgQueue;
@@ -515,6 +517,8 @@ void receive(int *tid, char *msg, int *len) {
         sem_wait(msgQueue->mbox_sem);
         mbox_withdraw(recv, msg, len);
     }
+    
+    free(recv);
 }
 
 /* Send a message and wait for reception. The same as send(), except that the caller does not return until the destination thread has received the message. */
