@@ -489,7 +489,7 @@ void send(int tid, char *msg, int len) {
         }*/
     
     mbox_deposit(destination, msg, len);
-    
+    sem_signal(destination->mbox_sem);
     free(destination);
     free(current);
   /*  mbox * sendTo;
