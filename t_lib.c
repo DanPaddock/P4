@@ -491,6 +491,7 @@ void send(int tid, char *msg, int len) {
     mbox_deposit(destination, msg, len);
     
     free(destination);
+    free(current);
   /*  mbox * sendTo;
     if (running->thread_id == tid) {
         sendTo = msgQueue;
