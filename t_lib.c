@@ -428,7 +428,7 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
 
 /* Send a message to the thread whose tid is tid. msg is the pointer to the start of the message, and len specifies the length of the message in bytes. In your implementation, all messages are character strings. */
 void send(int tid, char *msg, int len) {
-    printf("hmm");
+   /* printf("hmm");
     struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
     struct messageNode * headMsg = msgQueue->msg;
     newMsg->message = malloc(len+1);
@@ -446,8 +446,47 @@ void send(int tid, char *msg, int len) {
         }
         headMsg->next = newMsg;
     }
+    */
     
-    mbox_deposit(msgQueue, newMsg, newMsg->len);
+     mbox *destination = (mbox *) malloc(sizeof(mbox));
+    
+    if(msgQueue->mbox_sem->q->front->tcb->thread_id == tid){
+        destination = msgQueue;
+    } else{
+        QNode *current;
+        if (ready != NULL) {
+            current = ready->front;
+            
+            while (current != NULL) {
+                if (current->tcb->thread_id == tid) {
+                    destination = current->tcb->mailbox;
+                }
+                current = current->next;
+            }
+            
+        }
+    }
+    
+    
+        
+        ///////////
+   /* if (running->thread_id == tid) {
+        return running->mailbox;
+    } else {
+        Queue *current;
+        if (ready != NULL) {
+            current = ready->front;
+            
+            while (NULL != currentNode) {
+                if (currentNode->thread_id == tid) {
+                    return currentNode->mailbox;
+                }
+                currentNode = currentNode->next;
+            }
+            
+        }*/
+    
+    mbox_deposit(destination, msg, len);
   /*  mbox * sendTo;
     if (running->thread_id == tid) {
         sendTo = msgQueue;
@@ -521,7 +560,25 @@ void block_receive(int *tid, char *msg, int *length){
 }
 
 /*
+ ////////////
+ if (running->thread_id == tid) {
+ return running->mailbox;
+ } else {
+ threadNode *currentNode;
+ if (NULL != ready) {
+ currentNode = ready->first;
  
+ while (NULL != currentNode) {
+ if (currentNode->thread_id == tid) {
+ return currentNode->mailbox;
+ }
+ currentNode = currentNode->next;
+ }
+ 
+ }
+ }
+ return NULL;
+ ///////
  
  void Producer(void){
  
