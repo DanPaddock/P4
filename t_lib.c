@@ -423,13 +423,23 @@ void send(int tid, char *msg, int len) {
 
 /* Wait for and receive a message from another thread. The caller has to specify the sender's tid in tid, or sets tid to 0 if it intends to receive a message sent by any thread. If there is no "matching" message to receive, the calling thread waits (i.e., blocks itself). [A sending thread is responsible for waking up a waiting, receiving thread.] Upon returning, the message is stored starting at msg. The tid of the thread that sent the message is stored in tid, and the length of the message is stored in len. The caller of receive() is responsible for allocating the space in which the message is stored. Even if more than one message awaits the caller, only one message is returned per call to receive(). Messages are received in the order in which they were sent. The caller will not resume execution until it has received a message (blocking receive). */
 void receive(int *tid, char *msg, int *len) {
-    if (running->thread_id == 0) {
-        msgQueue->msg = running->msg;
-    }else {
-        sem_wait(msgQueue->mbox_sem);
-        msgQueue->msg = running->msg;
+    if(running->msg == msg && running->thread_id == tid){
+        
+        struct messageNode * recvMsg = (messageNode *) malloc(sizeof(messageNode));
+        recvMsg->message = malloc(len+1);
+        strcpy(recvMsg->message, msg);
+        recvMsg->len = len;
+        recvMsg->receiver = tid;
+        recvMsg->sender = running->thread_id;
+        recvMsg->next = NULL;
+        
+        if (running->thread_id == 0) {
+            msgQueue->msg = recvMsg;
+        } else {
+            sem_wait(msgQueue->mbox_sem);
+            msgQueue->msg = recvMsg;
+        }
     }
-    
 }
 
 /* Send a message and wait for reception. The same as send(), except that the caller does not return until the destination thread has received the message. */
