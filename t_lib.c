@@ -418,7 +418,13 @@ void send(int tid, char *msg, int len) {
     sendMsg->next = NULL;
     
     running->msg = sendMsg;
-
+    
+    free(sendMsg->message);
+    free(sendMsg->len);
+    free(sendMsg->receiver);
+    free(sendMsg->sender);
+    free(sendMsg->next);
+    free(sendMsg);
 }
 
 /* Wait for and receive a message from another thread. The caller has to specify the sender's tid in tid, or sets tid to 0 if it intends to receive a message sent by any thread. If there is no "matching" message to receive, the calling thread waits (i.e., blocks itself). [A sending thread is responsible for waking up a waiting, receiving thread.] Upon returning, the message is stored starting at msg. The tid of the thread that sent the message is stored in tid, and the length of the message is stored in len. The caller of receive() is responsible for allocating the space in which the message is stored. Even if more than one message awaits the caller, only one message is returned per call to receive(). Messages are received in the order in which they were sent. The caller will not resume execution until it has received a message (blocking receive). */
