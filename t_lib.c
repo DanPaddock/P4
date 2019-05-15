@@ -457,14 +457,6 @@ void block_send(int tid, char *msg, int length){
     
     block_receive(&tid, &msg, length);
     
-    free(sendMsg->message);
-    free(sendMsg->len);
-    free(sendMsg->receiver);
-    free(sendMsg->sender);
-    free(sendMsg->next);
-    free(sendMsg);
-    free(headMsg);
-    
     return;
 }
 void block_receive(int *tid, char *msg, int *length){
@@ -476,65 +468,8 @@ void block_receive(int *tid, char *msg, int *length){
         recvMsg->receiver = *tid;
         recvMsg->sender = running->thread_id;
         recvMsg->next = NULL;
-        
-        free(recvMsg->message);
-        free(recvMsg->len);
-        free(recvMsg->receiver);
-        free(recvMsg->sender);
-        free(recvMsg->next);
-        free(recvMsg);
     }
     
     return;
 }
-
-/*
- ////////////
- if (running->thread_id == tid) {
- return running->mailbox;
- } else {
- threadNode *currentNode;
- if (NULL != ready) {
- currentNode = ready->first;
- 
- while (NULL != currentNode) {
- if (currentNode->thread_id == tid) {
- return currentNode->mailbox;
- }
- currentNode = currentNode->next;
- }
- 
- }
- }
- return NULL;
- ///////
- 
- void Producer(void){
- 
- int item;
- Message m;
- 
- while(1){
- 
- receive(Consumer, &m);
- item = produce();
- build_message(&m , item ) ;
- send(Consumer, &m);
- }
- }
- void Consumer(void){
- 
- int item;
- Message m;
- 
- while(1){
- 
- receive(Producer, &m);
- item = extracted_item();
- send(Producer, &m);
- consume_item(item);
- }
- }
-
- */
 
