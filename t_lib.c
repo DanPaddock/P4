@@ -418,6 +418,7 @@ void send(int tid, char *msg, int len) {
     sendMsg->next = NULL;
     
     running->msg = sendMsg;
+    sem_signal(msgQueue->mbox_sem);
     
     free(sendMsg->message);
     free(sendMsg->len);
@@ -432,6 +433,7 @@ void receive(int *tid, char *msg, int *len) {
     if (running->thread_id == 0) {
         msgQueue->msg = running->msg;
     }else {
+        sem_wait(msgQueue->mbox_sem);
         msgQueue->msg = running->msg;
     }
     
