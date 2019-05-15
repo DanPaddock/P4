@@ -406,121 +406,29 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
     }
 }
 
-/*
- // Send...
- struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
- struct messageNode * headMsg = msgQueue->msg;
- newMsg->message = malloc(len+1);
- strcpy(newMsg->message, msg);
- newMsg->len = len;
- newMsg->receiver = tid;
- newMsg->sender = running->thread_id;
- newMsg->next = NULL;
- if (msgQueue->msg == NULL) {
- msgQueue->msg = newMsg;
- }
- else {
- while (headMsg->next) {
- headMsg = headMsg -> next;
- }
- headMsg->next = newMsg;
- }
- */
-
 /* Send a message to the thread whose tid is tid. msg is the pointer to the start of the message, and len specifies the length of the message in bytes. In your implementation, all messages are character strings. */
 void send(int tid, char *msg, int len) {
-   /* printf("hmm");
-    struct messageNode * newMsg =(messageNode *) malloc(sizeof(messageNode));
-    struct messageNode * headMsg = msgQueue->msg;
-    newMsg->message = malloc(len+1);
-    strcpy(newMsg->message, msg);
-    newMsg->len = len;
-    newMsg->receiver = tid;
-    newMsg->sender = running->thread_id;
-    newMsg->next = NULL;
-    if (msgQueue->msg == NULL) {
-        msgQueue->msg = newMsg;
-    }
-    else {
-        while (headMsg->next) {
-            headMsg = headMsg -> next;
-        }
-        headMsg->next = newMsg;
-    }
-    */
     
-     mbox *destination = (mbox *) malloc(sizeof(mbox));
-    QNode *current = (QNode *) malloc(sizeof(QNode *));
+    struct messageNode * sendMsg = (messageNode *) malloc(sizeof(messageNode));
+    sendMsg->message = malloc(len+1);
+    strcpy(sendMsg->message, msg);
+    sendMsg->len = len;
+    sendMsg->receiver = tid;
+    sendMsg->sender = running->thread_id;
+    sendMsg->next = NULL;
     
-    if(msgQueue->mbox_sem->q->front->tcb->thread_id == tid){
-        destination = msgQueue;
-    } else{
-       // QNode *current;
-        if (ready != NULL) {
-            current = ready->front;
-            
-            while (current != NULL) {
-                if (current->tcb->thread_id == tid) {
-                    destination = current->tcb->mailbox;
-                }
-                current = current->next;
-            }
-            
-        }
-    }
-    
-    
-        
-        ///////////
-   /* if (running->thread_id == tid) {
-        return running->mailbox;
-    } else {
-        Queue *current;
-        if (ready != NULL) {
-            current = ready->front;
-            
-            while (NULL != currentNode) {
-                if (currentNode->thread_id == tid) {
-                    return currentNode->mailbox;
-                }
-                currentNode = currentNode->next;
-            }
-            
-        }*/
-    
-    mbox_deposit(destination, msg, len);
-    sem_signal(destination->mbox_sem);
-    free(destination);
-    free(current);
-  /*  mbox * sendTo;
-    if (running->thread_id == tid) {
-        sendTo = msgQueue;
-    } else {
-        messageNode *messNode;
-        if (NULL != ready) {
-            messNode = ready->front;
-            
-            while (NULL != messNode)
-                messNode = messNode->next;
-            
-        }
-    }
-    
-    mbox *send = sendTo;
-    mbox_deposit(send, msg, len);*/
+    running->msg = sendMsg;
+
 }
 
 /* Wait for and receive a message from another thread. The caller has to specify the sender's tid in tid, or sets tid to 0 if it intends to receive a message sent by any thread. If there is no "matching" message to receive, the calling thread waits (i.e., blocks itself). [A sending thread is responsible for waking up a waiting, receiving thread.] Upon returning, the message is stored starting at msg. The tid of the thread that sent the message is stored in tid, and the length of the message is stored in len. The caller of receive() is responsible for allocating the space in which the message is stored. Even if more than one message awaits the caller, only one message is returned per call to receive(). Messages are received in the order in which they were sent. The caller will not resume execution until it has received a message (blocking receive). */
 void receive(int *tid, char *msg, int *len) {
-   mbox *recv = msgQueue;
-    if (tid == 0) {
-        mbox_withdraw(recv, msg, len);
+    if (running->thread_id == 0) {
+        msgQueue->msg = running->msg;
     }else {
-        sem_wait(msgQueue->mbox_sem);
-        mbox_withdraw(recv, msg, len);
+        msgQueue->msg = running->msg;
     }
     
-    free(recv);
 }
 
 /* Send a message and wait for reception. The same as send(), except that the caller does not return until the destination thread has received the message. */

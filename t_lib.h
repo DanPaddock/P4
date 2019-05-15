@@ -12,7 +12,7 @@ struct tcb
 	int thread_id;
 	int thread_priority;
 	ucontext_t *thread_context;
-    struct mbox *mailbox;
+    struct messageNode *msg;
 };
 
 typedef struct tcb tcb;
